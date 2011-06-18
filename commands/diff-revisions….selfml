@@ -1,0 +1,37 @@
+(trigger
+    (key [[ctrl][shift]A]))
+
+(name [ Diff Revisions…])
+
+(input nothing)
+
+(output nothing)
+
+(save nothing)
+
+(script [require_cmd "${TM_SVN:=svn}" "If you have installed svn, then you need to either update your <tt>PATH</tt> or set the <tt>TM_SVN</tt> shell variable (e.g. in Preferences / Advanced)"
+
+ruby >& /tmp/tm_svn_debug <<END &
+begin
+	require 'tempfile'
+	require "$TM_BUNDLE_SUPPORT/svn_revision_chooser"
+	require "$TM_BUNDLE_SUPPORT/svn_diff"
+
+	file = ENV['TM_FILEPATH']
+	revisions = Subversion::choose_revision(file, "Diff two revs of #{File.basename(file)}", 2)
+	unless revisions.nil?
+		diff_text = Subversion::diff_working_copy_with_revision(:paths => [file],
+								:revision => "#{revisions[1]}:#{revisions[0]}",
+								:command_name => "Diff Revisions…")
+		Tempfile.open("svndiff #{File.basename(file)}") do |tempfile|
+			tempfile.write(diff_text)
+			tempfile.flush
+			%x{"#{ENV['TM_SUPPORT_PATH']}/bin/mate" -w #{e_sh(tempfile.path)}}
+		end
+	end
+
+rescue Exception => error
+	TextMate::UI.alert(:warning, "You’ve discovered a bug", "Please report the following text: #{error}\n\n#{error.backtrace.join(%Q{\n})}")
+end
+END
+])

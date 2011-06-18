@@ -1,0 +1,43 @@
+(trigger
+    (key [[ctrl][shift]A]))
+
+(name [ Check Out…])
+
+(input nothing)
+
+(output html)
+
+(save nothing)
+
+(script [require_cmd "${TM_SVN:=svn}" "If you have installed svn, then you need to either update your <tt>PATH</tt> or set the <tt>TM_SVN</tt> shell variable (e.g. in Preferences / Advanced)"
+
+# Setup Dialog asking for host
+url=$(CocoaDialog inputbox --float \
+    --title "Subversion Checkout" \
+    --informative-text "URL:" \
+    --text "svn+ssh://" \
+    --button1 "Checkout" \
+    --button2 "Cancel")
+
+# If user canceled exit.
+[[ "${url:0:1}" == "2" ]] && exit_discard
+
+# skip the return code so we are left with just the url
+url="${url:2}"
+
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= #
+
+# Setup Dialog asking where to save
+location=$(CocoaDialog filesave --float \
+    --text "Checking out $url" \
+    --with-file "$(basename "$url")" )
+
+# If user canceled exit.
+[[ -z "$location" ]] && exit_discard
+
+# format the checkout output
+export WorkPath="$location" # format_status will show paths as relative to this value
+"$TM_SVN" checkout "$url" "$location" 2>&1 |ruby -KU -- "${TM_BUNDLE_SUPPORT}/format_status.rb" --checkout
+
+open -b com.macromates.textmate "$location"
+])

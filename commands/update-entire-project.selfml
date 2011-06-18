@@ -1,0 +1,26 @@
+(trigger)
+
+(name [Update Selected Files to Newest (HEAD)])
+
+(input nothing)
+
+(output html)
+
+(save project)
+
+(script [require_cmd "${TM_SVN:=svn}" "If you have installed svn, then you need to either update your <tt>PATH</tt> or set the <tt>TM_SVN</tt> shell variable (e.g. in Preferences / Advanced)"
+
+if [[ -n "$TM_SELECTED_FILE" && -d "$TM_SELECTED_FILE" ]]
+   then WorkPath="$TM_SELECTED_FILE"
+   else WorkPath="${TM_PROJECT_DIRECTORY:-$TM_DIRECTORY}"
+fi
+
+export TM_SVN
+export WorkPath
+
+"$TM_SVN" update "$WorkPath" 2>&1 \
+|ruby -- "${TM_BUNDLE_SUPPORT}/format_status.rb"
+
+# force TM to refresh the current file..
+rescan_project
+])

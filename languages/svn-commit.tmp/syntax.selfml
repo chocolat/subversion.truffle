@@ -1,0 +1,29 @@
+(root text.subversion-commit
+    (zone meta.bullet-point.strong
+        (match
+            (regex [^\s*(•).*$\n?]
+                (1 punctuation.definition.item.subversion-commit))))
+    (zone meta.bullet-point.light
+        (match
+            (regex [^\s*(·).*$\n?]
+                (1 punctuation.definition.item.subversion-commit))))
+    (zone meta.bullet-point.star
+        (match
+            (regex [^\s*(\*).*$\n?]
+                (1 punctuation.definition.item.subversion-commit))))
+    (zone meta.scope.changed-files.svn
+        (start
+            (regex [(^--(This line, and those below, will be ignored| Diese und die folgenden Zeilen werden ignoriert )--$\n?)]
+                (1 meta.separator.svn)))
+        (end [--not gonna happen--]
+            (anchor.both))
+        (subzones
+            (zone markup.inserted.svn
+                (match
+                    (regex ^A\s+.*$\n?)))
+            (zone markup.changed.svn
+                (match
+                    (regex [^(M|.M)\s+.*$\n?])))
+            (zone markup.deleted.svn
+                (match
+                    (regex ^D\s+.*$\n?))))))

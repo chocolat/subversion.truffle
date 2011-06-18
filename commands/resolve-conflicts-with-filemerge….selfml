@@ -1,0 +1,58 @@
+(trigger
+    (key [[ctrl][shift]A]))
+
+(name [Resolve Conflicts With FileMerge…])
+
+(input nothing)
+
+(output tooltip)
+
+(save nothing)
+
+(script [#!/bin/bash
+#
+# Wrapper script to use FileMerge to resolve Subversion conflicts
+# [modified slightly from http://ssel.vub.ac.be/svn-gen/bdefrain/fmscripts/fmresolve]
+#
+
+conflictfile="$TM_FILEPATH"
+FM="/Developer/Applications/Utilities/FileMerge.app/Contents/MacOS/FileMerge"
+
+require_cmd "${TM_SVN:=svn}" "If you have installed svn, then you need to either update your <tt>PATH</tt> or set the <tt>TM_SVN</tt> shell variable (e.g. in Preferences / Advanced)"
+
+require_cmd "$FM" "You must install the Apple developer tools to run FileMerge"
+
+function lookup {
+	local info=$1
+	local wantedkey=$2
+	local key
+	local value
+	# Split lines in info through word splitting
+	local IFS=$'\n'
+	for line in $info; do
+		key=${line%%: *}
+		value=${line#*: }
+		if [ $key == $wantedkey ]; then
+			RETVAL=$value
+			return 0
+		fi
+	done
+	return 1
+}
+
+filedir=`dirname "$conflictfile"`
+info=`"$TM_SVN" info "$conflictfile"`
+lookup "$info" "Conflict Current Base File" && leftfile=$RETVAL
+lookup "$info" "Conflict Previous Working File" && rightfile=$RETVAL
+lookup "$info" "Conflict Previous Base File" && ancestorfile=$RETVAL
+mergefile=`basename "$conflictfile"`
+
+if [ -z "$leftfile" ] || [ -z "$rightfile" ] || [ -z "$ancestorfile" ]; then
+	echo "Can't obtain conflict info for $conflictfile" 1>&2
+	exit 2
+fi
+
+#echo Starting FileMerge... 1>&2
+"$FM" -left "${filedir}/${leftfile}" -right "${filedir}/${rightfile}" -ancestor "${filedir}/${ancestorfile}" -merge "${filedir}/${mergefile}" &>/dev/null &
+
+])

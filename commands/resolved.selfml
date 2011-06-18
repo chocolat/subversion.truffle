@@ -1,0 +1,18 @@
+(trigger
+    (key [[ctrl][shift]A]))
+
+(name Resolved)
+
+(input nothing)
+
+(output tooltip)
+
+(save nothing)
+
+(script [require_cmd "${TM_SVN:=svn}" "If you have installed svn, then you need to either update your <tt>PATH</tt> or set the <tt>TM_SVN</tt> shell variable (e.g. in Preferences / Advanced)"
+
+"$TM_SVN" resolved "$TM_FILEPATH"
+
+# force TM to refresh the project to get rid of the conflict files..
+rescan_project
+])

@@ -1,0 +1,16 @@
+(trigger)
+
+(name [Diff Selected Files With Working Copy (BASE)])
+
+(input nothing)
+
+(output new-document)
+
+(save nothing)
+
+(script [if [[ -n "$TM_SELECTED_FILE" && -d "$TM_SELECTED_FILE" ]]
+   then cd "$TM_SELECTED_FILE"
+   else cd "${TM_PROJECT_DIRECTORY:-$TM_DIRECTORY}"
+fi
+
+"${TM_SVN:-svn}" diff --diff-cmd diff])

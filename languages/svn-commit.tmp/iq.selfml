@@ -1,0 +1,6 @@
+(detector
+    (extension svn-commit.tmp)
+    (extension svn-commit.2.tmp))
+
+(in meta.scope.changed-files.svn
+    (no-spellchecking))

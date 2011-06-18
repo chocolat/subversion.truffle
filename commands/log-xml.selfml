@@ -1,0 +1,30 @@
+(trigger
+    (key [[ctrl][shift]A]))
+
+(name Log)
+
+(input nothing)
+
+(output html)
+
+(save nothing)
+
+(script [require_cmd "${TM_SVN:=svn}" "If you have installed svn, then you need to either update your <tt>PATH</tt> or set the <tt>TM_SVN</tt> shell variable (e.g. in Preferences / Advanced)"
+
+: ${TM_SVN_LOG_RANGE:=HEAD:1}
+: ${TM_SVN_LOG_LIMIT:=15}
+FORMAT_LOG="${TM_BUNDLE_SUPPORT}/format_log_xml.rb"
+
+if [[ $TM_SVN_LOG_LIMIT -eq 0 ]]; then
+	LIMIT=""
+else
+	LIMIT="--limit $TM_SVN_LOG_LIMIT"
+fi
+
+if [[ -z $TM_SELECTED_FILES ]]; then
+   "$TM_SVN" log --xml $LIMIT -vr "$TM_SVN_LOG_RANGE" \
+   "$TM_FILEPATH" 2>&1 | ruby -- "$FORMAT_LOG"
+else
+   eval "$TM_SVN" log --xml $LIMIT -vr "$TM_SVN_LOG_RANGE" \
+   "$TM_SELECTED_FILES" 2>&1 | ruby -- "$FORMAT_LOG"
+fi])

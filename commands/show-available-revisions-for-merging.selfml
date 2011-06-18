@@ -1,0 +1,67 @@
+(trigger
+    (key [[ctrl][shift]A]))
+
+(name [ Show Available Revisions for Merging])
+
+(input nothing)
+
+(output html)
+
+(save nothing)
+
+(script [#!/bin/bash
+#
+require_cmd "${TM_SVN:=svn}" "If you have installed svn, then you need to either update your <tt>PATH</tt> or set the <tt>TM_SVN</tt> shell variable (e.g. in Preferences / Advanced)"
+
+require_cmd "${TM_SVNMERGE:=svnmerge}" "If you have installed svnmerge, then you need to either update your <tt>PATH</tt> or set the <tt>TM_SVNMERGE</tt> shell variable (e.g. in Preferences / Advanced)"
+
+workpath="$TM_SELECTED_FILE"
+if [[ ! -d "$workpath" ]]; then
+	pre <<< "Please select a folder in the project drawer."
+	exit
+fi
+
+FORMAT_LOG="${TM_BUNDLE_SUPPORT}/format_log.rb"
+
+# svnmerge calls stty if COLUMNS is not set. Apparently Python has no is_tty? equivalent.
+export COLUMNS=80
+
+cd "$workpath"
+
+# check for no or multiple HEADs
+integratedRevs=`svn propget svnmerge-integrated "$workpath"`
+if [[ -z "$integratedRevs" ]]; then
+	pre <<< "Merge tracking has not been initialized for '$workpath'"
+	exit
+fi
+
+theHead=`osascript <<END
+	-- split heads (yes, svnmerge uses spaces to delimit; hopefully spaces in filenames get URI-style encoded, but I haven't checked)
+	set AppleScript's text item delimiters to {" "}
+	set theList to (every text item of "$integratedRevs")
+
+	-- split head names from associated revision numbers
+	set theHeads to {}
+	set AppleScript's text item delimiters to {":"}
+	repeat with i from 1 to the count of theList
+		set theHeads to (theHeads & (text item 1 of (item i of theList)))
+	end
+
+	if the count of theHeads is greater than 1 then
+		tell app "TextMate"
+			choose from list theHeads with prompt "Please choose the HEAD directory for '$workpath':"
+		end tell
+	else if the count of theHeads is 1 then
+		set the result to item 1 of theHeads
+	else
+		set the result to false
+	end if
+END`
+
+# exit if user canceled
+[[ "$theHead" = "false" ]] && exit_discard
+
+
+"$TM_SVNMERGE" avail --log -S "`basename $theHead`" 2>&1 \
+	| ruby -- "$FORMAT_LOG" '--title=Revisions Available for Merging'
+])
