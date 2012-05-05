@@ -1,10 +1,3 @@
 (menu command.remove-from-repository…
-    command.revert
     ---
-    command.commit
-    ---
-    (submenu [History and Info] command.blame command.info command.log-xml command.view-revision… command.subversion-status)
-    (submenu Diff command.diff-revisions… command.diff-with-latest command.diff-with-base command.diff-with-previous command.diff-with-revision…)
-    (submenu Merge command.show-available-revisions-for-merging command.resolve-conflicts-with-filemerge… command.resolved ---)
-    command.checkout…
-    ---)
+    (submenu Merge command.resolve-conflicts-with-filemerge… command.resolved ---))
